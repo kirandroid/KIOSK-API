@@ -21,12 +21,12 @@ var conn = mysql.createConnection({
 
 conn.connect((err) => {
 	if (err) {
-		console.log('Cannot Connect to Database' + err);
+		console.log('Cannot Connect to Database');
 	} else {
 		console.log('Connected to database');
 	}
 });
-app.get('/', (req, res) => res.send('Hello World!'));
+app.get('/', (req, res) => res.send('This is main page of KIOSK API. Try the "/api/users" endpoint to get started!'));
 
 app.get('/api/users', (req, res) => {
 	conn.query('SELECT * FROM `User`', function(err, rows) {
