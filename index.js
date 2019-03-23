@@ -12,14 +12,15 @@ app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 const port = process.env.PORT || 4000;
 
-var conn = mysql.createConnection({
+var conn = mysql.createPool({
+	connectionLimit: 10,
 	host: '162.241.230.107',
 	user: 'hamrocak_kiran',
 	password: 'KiranPradhan',
 	database: 'hamrocak_KIOSK'
 });
 
-conn.connect((err) => {
+conn.getConnection((err) => {
 	if (err) {
 		console.log('Cannot Connect to Database');
 	} else {
