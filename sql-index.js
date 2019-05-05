@@ -2,7 +2,6 @@ const Joi = require('joi'); // Javascript Object Schema Validation
 var mysql = require('mysql');
 const express = require('express');
 const app = express();
-const oracledb = require('oracledb');
 var compression = require('compression');
 var helmet = require('helmet');
 app.use(helmet());
@@ -13,21 +12,27 @@ app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 const port = process.env.PORT || 4000;
 
-const config = {
-	user: 'root',
-	password: 'root',
-	connectString: 'localhost:1521/xe'
-};
+var conn = mysql.createPool({
+	connectionLimit: 10,
+	host: '162.241.230.107',
+	user: 'hamrocak_kiran',
+	password: 'KiranPradhan',
+	database: 'hamrocak_KIOSK'
+});
 
+conn.getConnection((err) => {
+	if (err) {
+		console.log('Cannot Connect to Database');
+	} else {
+		console.log('Connected to database');
+	}
+});
 app.get('/', (req, res) => res.send('This is main page of KIOSK API. Try the "/api/users" endpoint to get started!'));
 
 app.get('/api/users', (req, res) => {
-	oracledb.getConnection(config, function(err, connection) {
+	conn.query('SELECT * FROM `User`', function(err, rows) {
 		if (err) throw err;
-		connection.execute('select * from USERS_TT', {}, { outFormat: oracledb.OBJECT }, function(err, rows) {
-			if (err) throw err;
-			res.send(rows.rows);
-		});
+		res.send(rows);
 	});
 });
 
