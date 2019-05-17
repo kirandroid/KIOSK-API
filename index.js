@@ -13,6 +13,7 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 const port = process.env.PORT || 4000;
+oracledb.autoCommit = true;
 
 const config = {
 	user: 'root',
@@ -55,13 +56,15 @@ app.get('/api/users', (req, res) => {
 app.get('/api/featured_home_slider', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
 		if (err) throw err;
-		connection.execute('select * from FEATURED_HOME_SLIDER', {}, { outFormat: oracledb.OBJECT }, function(
-			err,
-			rows
-		) {
-			if (err) throw err;
-			res.send(rows.rows);
-		});
+		connection.execute(
+			'select * from F                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  EATURED_HOME_SLIDER',
+			{},
+			{ outFormat: oracledb.OBJECT },
+			function(err, rows) {
+				if (err) throw err;
+				res.send(rows.rows);
+			}
+		);
 	});
 });
 
@@ -76,6 +79,38 @@ app.post('/api/login', (req, res) => {
 			[ req.body.USERNAME, req.body.PASSWORD ],
 			{ outFormat: oracledb.OBJECT },
 			function(err, rows) {
+				if (rows.length > 0) {
+					res.send(rows.rows);
+				} else {
+					res.send(err);
+				}
+			}
+		);
+	});
+});
+// INSERT INTO "ROOT"."USERS" (ID, FIRST_NAME, LAST_NAME, USERNAME, PASSWORD, EMAIL, STUDENT_ID)
+// VALUES ('3', 'Roshan', 'Shrestha', 'Rosh', 'Rosh', 'Rosh@gmail.com', '2132143')
+
+app.post('/api/register', (req, res) => {
+	// const result = validateLogin(req.body);
+	// if (result.error) return res.status(400).send(result.error);
+
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) throw err;
+		connection.execute(
+			'INSERT INTO USERS (ID, FIRST_NAME, LAST_NAME, USERNAME, PASSWORD, EMAIL, STUDENT_ID) VALUES(:UserID, :FNAME, :LNAME, :UNAME, :PASSER, :UEMAIL, :STDID)',
+			[
+				req.body.ID,
+				req.body.FIRST_NAME,
+				req.body.LAST_NAME,
+				req.body.USERNAME,
+				req.body.PASSWORD,
+				req.body.EMAIL,
+				req.body.STUDENT_ID
+			],
+			{ outFormat: oracledb.OBJECT },
+			function(err, rows) {
+				res.send(rows.rows);
 				if (rows.length > 0) {
 					res.send(rows.rows);
 				} else {
