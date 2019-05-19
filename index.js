@@ -78,43 +78,53 @@ app.post('/api/login', (req, res) => {
 			'select * from USERS WHERE USERNAME = :USER_ID AND PASSWORD = :USER_PASS',
 			[ req.body.USERNAME, req.body.PASSWORD ],
 			{ outFormat: oracledb.OBJECT },
-			function(err, rows) {
-				if (rows.length > 0) {
-					res.send(rows.rows);
-				} else {
+			function(err, result) {
+				console.log(result.rows.length);
+				if (err) {
 					res.send(err);
 				}
+				res.send(result.rows);
 			}
 		);
 	});
 });
-// INSERT INTO "ROOT"."USERS" (ID, FIRST_NAME, LAST_NAME, USERNAME, PASSWORD, EMAIL, STUDENT_ID)
-// VALUES ('3', 'Roshan', 'Shrestha', 'Rosh', 'Rosh', 'Rosh@gmail.com', '2132143')
 
 app.post('/api/register', (req, res) => {
 	// const result = validateLogin(req.body);
 	// if (result.error) return res.status(400).send(result.error);
-
+	res.setHeader('Content-Type', 'application/json');
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+			res.sendStatus(500);
+			return;
+		}
 		connection.execute(
-			'INSERT INTO USERS (ID, FIRST_NAME, LAST_NAME, USERNAME, PASSWORD, EMAIL, STUDENT_ID) VALUES(:UserID, :FNAME, :LNAME, :UNAME, :PASSER, :UEMAIL, :STDID)',
+			'INSERT INTO USERS (FIRST_NAME, LAST_NAME, USERNAME, PASSWORD, EMAIL, CREATED_AT, STUDENT_ID, UPDATED_AT, ROLE, STUDY_LEVEL, COURSE, CONTACT, GENDER) VALUES(:FNAME, :LNAME, :UNAME, :PASSER, :UEMAIL, :CREATEDAT, :STDID, :UPDATEDAT, :ROLE, :STUDYLVL, :COURSE, :CONTACT, :GENDER)',
 			[
-				req.body.ID,
 				req.body.FIRST_NAME,
 				req.body.LAST_NAME,
 				req.body.USERNAME,
 				req.body.PASSWORD,
 				req.body.EMAIL,
-				req.body.STUDENT_ID
+				req.body.CREATED_AT,
+				req.body.STUDENT_ID,
+				req.body.UPDATED_AT,
+				req.body.ROLE,
+				req.body.STUDY_LEVEL,
+				req.body.COURSE,
+				req.body.CONTACT,
+				req.body.GENDER
 			],
 			{ outFormat: oracledb.OBJECT },
-			function(err, rows) {
-				res.send(rows.rows);
-				if (rows.length > 0) {
-					res.send(rows.rows);
-				} else {
+			function(err, result) {
+				console.log(err);
+				console.log(result);
+
+				if (err) {
 					res.send(err);
+				} else {
+					res.status(200).send({ Status: 'success' });
 				}
 			}
 		);
