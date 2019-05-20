@@ -53,6 +53,26 @@ app.get('/api/users', (req, res) => {
 	});
 });
 
+app.get('/api/events', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) throw err;
+		connection.execute('select * from EVENT', {}, { outFormat: oracledb.OBJECT }, function(err, rows) {
+			if (err) throw err;
+			res.send(rows.rows);
+		});
+	});
+});
+
+app.get('/api/bookings', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) throw err;
+		connection.execute('select * from BOOKING', {}, { outFormat: oracledb.OBJECT }, function(err, rows) {
+			if (err) throw err;
+			res.send(rows.rows);
+		});
+	});
+});
+
 app.get('/api/featured_home_slider', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
 		if (err) throw err;
@@ -79,7 +99,6 @@ app.post('/api/login', (req, res) => {
 			[ req.body.USERNAME, req.body.PASSWORD ],
 			{ outFormat: oracledb.OBJECT },
 			function(err, result) {
-				console.log(result.rows.length);
 				if (err) {
 					res.send(err);
 				}
@@ -115,6 +134,42 @@ app.post('/api/register', (req, res) => {
 				req.body.COURSE,
 				req.body.CONTACT,
 				req.body.GENDER
+			],
+			{ outFormat: oracledb.OBJECT },
+			function(err, result) {
+				if (err) {
+					res.send(err);
+				} else {
+					res.status(200).send({ Status: 'success' });
+				}
+			}
+		);
+	});
+});
+
+app.post('/api/addevent', (req, res) => {
+	// const result = validateLogin(req.body);
+	// if (result.error) return res.status(400).send(result.error);
+	res.setHeader('Content-Type', 'application/json');
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) {
+			console.log(err);
+			res.sendStatus(500);
+			return;
+		}
+		connection.execute(
+			'INSERT INTO EVENT (TITLE, IMAGE_URL, DESCRIPTION, SEAT_NUMBER, CREATED_AT, UPDATED_AT, EVENT_DATE, EVENT_TIME, EVENT_TYPE, EVENT_STATUS) VALUES(:ETITLE, :EIMAGEURL, :EDESCRIPTION, :ESEAT, :ECREATEDAT, :EUPDATEDAT, :EVENTDATE, :EVENTTIME, :EVENTTYPE, :EVENTSTATUS)',
+			[
+				req.body.TITLE,
+				req.body.IMAGE_URL,
+				req.body.DESCRIPTION,
+				req.body.SEAT_NUMBER,
+				req.body.CREATED_AT,
+				req.body.UPDATED_AT,
+				req.body.EVENT_DATE,
+				req.body.EVENT_TIME,
+				req.body.EVENT_TYPE,
+				req.body.EVENT_STATUS
 			],
 			{ outFormat: oracledb.OBJECT },
 			function(err, result) {
