@@ -12,7 +12,7 @@ const path = require('path');
 var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 3000;
 oracledb.autoCommit = true;
 
 const config = {
@@ -31,6 +31,8 @@ app.post('/api/upload', function(req, res) {
 	if (Object.keys(req.files).length == 0) {
 		return res.status(400).send('No files were uploaded.');
 	}
+	console.log(req);
+
 	let imageFile = req.files.imageFile;
 
 	imageFile.mv(__dirname + '/uploads/' + imageFile.name, function(err, result) {
@@ -50,6 +52,21 @@ app.get('/api/users', (req, res) => {
 			if (err) throw err;
 			res.send(rows.rows);
 		});
+	});
+});
+
+app.get('/api/selectUsers', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) throw err;
+		connection.execute(
+			'select * from USERS WHERE USER_ID = :USERID',
+			[ req.query.id ],
+			{ outFormat: oracledb.OBJECT },
+			function(err, rows) {
+				if (err) throw err;
+				res.send(rows.rows);
+			}
+		);
 	});
 });
 
@@ -101,8 +118,14 @@ app.post('/api/login', (req, res) => {
 			function(err, result) {
 				if (err) {
 					res.send(err);
+				} else if (result.rows <= 0) {
+					res.status(204).send({
+						status: '404',
+						Message: 'Invalid Student ID or Password!'
+					});
+				} else {
+					res.status(200).send(result.rows);
 				}
-				res.send(result.rows);
 			}
 		);
 	});
@@ -170,6 +193,43 @@ app.post('/api/addevent', (req, res) => {
 				req.body.EVENT_TIME,
 				req.body.EVENT_TYPE,
 				req.body.EVENT_STATUS
+			],
+			{ outFormat: oracledb.OBJECT },
+			function(err, result) {
+				console.log(err);
+				console.log(result);
+
+				if (err) {
+					res.send(err);
+				} else {
+					res.status(200).send({ Status: 'success' });
+				}
+			}
+		);
+	});
+});
+
+app.put('/api/updateProfile', (req, res) => {
+	res.setHeader('Content-Type', 'application/json');
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) {
+			console.log(err);
+			res.sendStatus(500);
+			return;
+		}
+		connection.execute(
+			'UPDATE USERS SET FIRST_NAME = :FNAME, LAST_NAME = :LNAME, USERNAME = :UNAME, EMAIL= :UEMAIL, STUDY_LEVEL = :STUDYLEVEL, COURSE = :COURSE, CONTACT = :CONTACT, GENDER = :GENDER, UPDATED_AT= :UPDATEDAT WHERE USER_ID = :UserID',
+			[
+				req.body.FIRST_NAME,
+				req.body.LAST_NAME,
+				req.body.USERNAME,
+				req.body.EMAIL,
+				req.body.STUDY_LEVEL,
+				req.body.COURSE,
+				req.body.CONTACT,
+				req.body.GENDER,
+				req.body.UPDATED_AT,
+				req.body.USERID
 			],
 			{ outFormat: oracledb.OBJECT },
 			function(err, result) {
