@@ -70,10 +70,40 @@ app.get('/api/selectUsers', (req, res) => {
 	});
 });
 
-app.get('/api/events', (req, res) => {
+app.get('/api/activity', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
 		if (err) throw err;
-		connection.execute('select * from EVENT', {}, { outFormat: oracledb.OBJECT }, function(err, rows) {
+		connection.execute(
+			'select * from ACTIVITY WHERE ACT_TYPE = :ACTTYPE',
+			[ req.query.type ],
+			{ outFormat: oracledb.OBJECT },
+			function(err, rows) {
+				if (err) throw err;
+				res.send(rows.rows);
+			}
+		);
+	});
+});
+
+app.get('/api/service', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) throw err;
+		connection.execute(
+			'select * from SERVICE WHERE SER_TYPE = :SERTYPE',
+			[ req.query.type ],
+			{ outFormat: oracledb.OBJECT },
+			function(err, rows) {
+				if (err) throw err;
+				res.send(rows.rows);
+			}
+		);
+	});
+});
+
+app.get('/api/community', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) throw err;
+		connection.execute('select * from COMMUNITY', {}, { outFormat: oracledb.OBJECT }, function(err, rows) {
 			if (err) throw err;
 			res.send(rows.rows);
 		});
@@ -157,6 +187,88 @@ app.post('/api/register', (req, res) => {
 				req.body.COURSE,
 				req.body.CONTACT,
 				req.body.GENDER
+			],
+			{ outFormat: oracledb.OBJECT },
+			function(err, result) {
+				if (err) {
+					res.send(err);
+				} else {
+					res.status(200).send({ Status: 'success' });
+				}
+			}
+		);
+	});
+});
+
+app.post('/api/addactivity', function(req, res) {
+	if (Object.keys(req.files).length == 0) {
+		return res.status(400).send('No files were uploaded.');
+	}
+	console.log(req);
+
+	let imageFile = req.files.imageFile;
+
+	imageFile.mv(__dirname + '/uploads/' + imageFile.name, function(err, result) {
+		if (err) return res.status(500).send(err);
+
+		console.log('http://kioskapi.tk:4000/images/' + imageFile.name);
+	});
+
+	res.setHeader('Content-Type', 'application/json');
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) {
+			console.log(err);
+			res.sendStatus(500);
+			return;
+		}
+		connection.execute(
+			'INSERT INTO ACTIVITY (ACT_NAME, ACT_IMAGE, ACT_DESCRIPTION, ACT_TYPE) VALUES(:ACTNAME, :ACTIMAGE, :ACTDESC, :ACTYPE)',
+			[
+				req.body.ACT_NAME,
+				'http://kioskapi.tk:4000/images/' + imageFile.name,
+				req.body.ACT_DESCRIPTION,
+				req.body.ACT_TYPE
+			],
+			{ outFormat: oracledb.OBJECT },
+			function(err, result) {
+				if (err) {
+					res.send(err);
+				} else {
+					res.status(200).send({ Status: 'success' });
+				}
+			}
+		);
+	});
+});
+
+app.post('/api/addservice', function(req, res) {
+	if (Object.keys(req.files).length == 0) {
+		return res.status(400).send('No files were uploaded.');
+	}
+	console.log(req);
+
+	let imageFile = req.files.imageFile;
+
+	imageFile.mv(__dirname + '/uploads/' + imageFile.name, function(err, result) {
+		if (err) return res.status(500).send(err);
+
+		console.log('http://kioskapi.tk:4000/images/' + imageFile.name);
+	});
+
+	res.setHeader('Content-Type', 'application/json');
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) {
+			console.log(err);
+			res.sendStatus(500);
+			return;
+		}
+		connection.execute(
+			'INSERT INTO SERVICE (SER_NAME, SER_IMAGE, SER_DESCRIPTION, SER_TYPE) VALUES(:ACTNAME, :ACTIMAGE, :ACTDESC, :ACTYPE)',
+			[
+				req.body.SER_NAME,
+				'http://kioskapi.tk:4000/images/' + imageFile.name,
+				req.body.SER_DESCRIPTION,
+				req.body.SER_TYPE
 			],
 			{ outFormat: oracledb.OBJECT },
 			function(err, result) {
