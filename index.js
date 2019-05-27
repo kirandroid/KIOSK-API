@@ -47,7 +47,9 @@ app.post('/api/upload', function(req, res) {
 
 app.get('/api/events', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute('select * from EVENT', {}, { outFormat: oracledb.OBJECT }, function(err, rows) {
 			if (err) return res.status(500).send(err);
 			res.send(rows.rows);
@@ -57,7 +59,9 @@ app.get('/api/events', (req, res) => {
 
 app.get('/api/selectevents', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute(
 			'select * from EVENT WHERE EVENT_ID = :EVENTID',
 			[ req.query.eventId ],
@@ -72,7 +76,9 @@ app.get('/api/selectevents', (req, res) => {
 
 app.get('/api/users', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute('select * from USERS', {}, { outFormat: oracledb.OBJECT }, function(err, rows) {
 			if (err) throw err;
 			res.send(rows.rows);
@@ -82,7 +88,9 @@ app.get('/api/users', (req, res) => {
 
 app.get('/api/selectUsers', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute(
 			'select * from USERS WHERE USER_ID = :USERID',
 			[ req.query.id ],
@@ -97,7 +105,9 @@ app.get('/api/selectUsers', (req, res) => {
 
 app.get('/api/checkBookedEvent', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute(
 			'select * from BOOKING WHERE EVENT_ID = :EVENTID AND USER_ID = :USERID',
 			[ req.query.eventid, req.query.userid ],
@@ -119,9 +129,37 @@ app.get('/api/checkBookedEvent', (req, res) => {
 	});
 });
 
+app.get('/api/checkstudent', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) {
+			console.log(err);
+		}
+		connection.execute(
+			'select * from STUDENT WHERE STUDENT_ID = :STUDENTID AND AVAILABLE = 1',
+			[ req.query.studentid ],
+			{ outFormat: oracledb.OBJECT },
+			function(err, result) {
+				if (err) {
+					res.send(err);
+				} else if (result.rows <= 0) {
+					res.send({
+						isAvail: false
+					});
+				} else {
+					res.send({
+						isAvail: true
+					});
+				}
+			}
+		);
+	});
+});
+
 app.get('/api/activity', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute(
 			'select * from ACTIVITY WHERE ACT_TYPE = :ACTTYPE',
 			[ req.query.type ],
@@ -136,7 +174,9 @@ app.get('/api/activity', (req, res) => {
 
 app.get('/api/service', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute(
 			'select * from SERVICE WHERE SER_TYPE = :SERTYPE',
 			[ req.query.type ],
@@ -151,7 +191,9 @@ app.get('/api/service', (req, res) => {
 
 app.get('/api/community', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute('select * from COMMUNITY', {}, { outFormat: oracledb.OBJECT }, function(err, rows) {
 			if (err) throw err;
 			res.send(rows.rows);
@@ -161,7 +203,9 @@ app.get('/api/community', (req, res) => {
 
 app.get('/api/bookings', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute(
 			'select * from BOOKING WHERE USER_ID = :USERID',
 			[ req.query.userId ],
@@ -178,7 +222,9 @@ app.get('/api/allbookings', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
 		if (err) throw err;
 		connection.execute('select * from BOOKING', [], { outFormat: oracledb.OBJECT }, function(err, rows) {
-			if (err) throw err;
+			if (err) {
+				console.log(err);
+			}
 			res.send(rows.rows);
 		});
 	});
@@ -186,7 +232,9 @@ app.get('/api/allbookings', (req, res) => {
 
 app.get('/api/featured_home_slider', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute(
 			'select * from F                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  EATURED_HOME_SLIDER',
 			{},
@@ -204,7 +252,9 @@ app.post('/api/login', (req, res) => {
 	if (result.error) return res.status(400).send(result.error);
 
 	oracledb.getConnection(config, function(err, connection) {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+		}
 		connection.execute(
 			'select * from USERS WHERE USERNAME = :USER_ID AND PASSWORD = :USER_PASS',
 			[ req.body.USERNAME, req.body.PASSWORD ],
