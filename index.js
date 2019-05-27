@@ -338,51 +338,93 @@ app.post("/api/register", (req, res) => {
   });
 });
 
-app.post("/api/addactivity", function(req, res) {
-  if (Object.keys(req.files).length == 0) {
-    return res.status(400).send("No files were uploaded.");
-  }
-  console.log(req);
+app.post('/api/addnewsnotice', (req, res) => {
+	res.setHeader('Content-Type', 'application/json');
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) {
+			console.log(err);
+			res.sendStatus(500);
+			return;
+		}
+		console.log(req);
 
-  let imageFile = req.files.imageFile;
+		connection.execute(
+			'INSERT INTO NEWSNOTICE (NN_TITLE, NN_DESC, CREATED_AT, UPDATED_AT, ACTIVE, TYPE) VALUES( :NNTITLE, :NNDESC, :CREATEDAT, :UPDATEDAT, :NNACTIVE, :NNTYPE)',
+			[
+				req.body.NN_TITLE,
+				req.body.NN_DESC,
+				req.body.CREATED_AT,
+				req.body.UPDATED_AT,
+				req.body.ACTIVE,
+				req.body.TYPE
+			],
+			{ outFormat: oracledb.OBJECT },
+			function(err, result) {
+				if (err) {
+					res.send(err);
+				} else {
+					res.status(200).send({ Status: 'success' });
+				}
+			}
+		);
+	});
+});
 
-  const randomNumber = Math.floor(Math.random() * 9999999999);
-  imageFile.mv(
-    __dirname + "/uploads/" + randomNumber + imageFile.name,
-    function(err, result) {
-      if (err) return res.status(500).send(err);
+app.get('/api/newsnotice', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) {
+			console.log(err);
+		}
+		connection.execute('select * from NEWSNOTICE WHERE ACTIVE = 1', {}, { outFormat: oracledb.OBJECT }, function(
+			err,
+			rows
+		) {
+			if (err) throw err;
+			res.send(rows.rows);
+		});
+	});
+});
 
-      console.log(
-        "http://kioskapi.tk:4000/images/" + randomNumber + imageFile.name
-      );
-    }
-  );
+app.post('/api/addactivity', function(req, res) {
+	if (Object.keys(req.files).length == 0) {
+		return res.status(400).send('No files were uploaded.');
+	}
+	console.log(req);
 
-  res.setHeader("Content-Type", "application/json");
-  oracledb.getConnection(config, function(err, connection) {
-    if (err) {
-      console.log(err);
-      res.sendStatus(500);
-      return;
-    }
-    connection.execute(
-      "INSERT INTO ACTIVITY (ACT_NAME, ACT_IMAGE, ACT_DESCRIPTION, ACT_TYPE) VALUES(:ACTNAME, :ACTIMAGE, :ACTDESC, :ACTYPE)",
-      [
-        req.body.ACT_NAME,
-        "http://kioskapi.tk:4000/images/" + imageFile.name,
-        req.body.ACT_DESCRIPTION,
-        req.body.ACT_TYPE
-      ],
-      { outFormat: oracledb.OBJECT },
-      function(err, result) {
-        if (err) {
-          res.send(err);
-        } else {
-          res.status(200).send({ Status: "success" });
-        }
-      }
-    );
-  });
+	let imageFile = req.files.imageFile;
+
+	const randomNumber = Math.floor(Math.random() * 9999999999);
+	imageFile.mv(__dirname + '/uploads/' + randomNumber + imageFile.name, function(err, result) {
+		if (err) return res.status(500).send(err);
+
+		console.log('http://kioskapi.tk:4000/images/' + randomNumber + imageFile.name);
+	});
+
+	res.setHeader('Content-Type', 'application/json');
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) {
+			console.log(err);
+			res.sendStatus(500);
+			return;
+		}
+		connection.execute(
+			'INSERT INTO ACTIVITY (ACT_NAME, ACT_IMAGE, ACT_DESCRIPTION, ACT_TYPE) VALUES(:ACTNAME, :ACTIMAGE, :ACTDESC, :ACTYPE)',
+			[
+				req.body.ACT_NAME,
+				'http://kioskapi.tk:4000/images/' + imageFile.name,
+				req.body.ACT_DESCRIPTION,
+				req.body.ACT_TYPE
+			],
+			{ outFormat: oracledb.OBJECT },
+			function(err, result) {
+				if (err) {
+					res.send(err);
+				} else {
+					res.status(200).send({ Status: 'success' });
+				}
+			}
+		);
+	});
 });
 
 app.post("/api/bookevent", function(req, res) {
