@@ -45,6 +45,31 @@ app.post('/api/upload', function(req, res) {
 	});
 });
 
+app.get('/api/events', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) throw err;
+		connection.execute('select * from EVENT', {}, { outFormat: oracledb.OBJECT }, function(err, rows) {
+			if (err) return res.status(500).send(err);
+			res.send(rows.rows);
+		});
+	});
+});
+
+app.get('/api/selectevents', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) throw err;
+		connection.execute(
+			'select * from EVENT WHERE EVENT_ID = :EVENTID',
+			[ req.query.eventId ],
+			{ outFormat: oracledb.OBJECT },
+			function(err, rows) {
+				if (err) return res.status(500).send(err);
+				res.send(rows.rows);
+			}
+		);
+	});
+});
+
 app.get('/api/users', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
 		if (err) throw err;
@@ -65,6 +90,30 @@ app.get('/api/selectUsers', (req, res) => {
 			function(err, rows) {
 				if (err) throw err;
 				res.send(rows.rows);
+			}
+		);
+	});
+});
+
+app.get('/api/checkBookedEvent', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) throw err;
+		connection.execute(
+			'select * from BOOKING WHERE EVENT_ID = :EVENTID AND USER_ID = :USERID',
+			[ req.query.eventid, req.query.userid ],
+			{ outFormat: oracledb.OBJECT },
+			function(err, result) {
+				if (err) {
+					res.send(err);
+				} else if (result.rows <= 0) {
+					res.send({
+						hasBooked: false
+					});
+				} else {
+					res.send({
+						hasBooked: true
+					});
+				}
 			}
 		);
 	});
@@ -113,7 +162,22 @@ app.get('/api/community', (req, res) => {
 app.get('/api/bookings', (req, res) => {
 	oracledb.getConnection(config, function(err, connection) {
 		if (err) throw err;
-		connection.execute('select * from BOOKING', {}, { outFormat: oracledb.OBJECT }, function(err, rows) {
+		connection.execute(
+			'select * from BOOKING WHERE USER_ID = :USERID',
+			[ req.query.userId ],
+			{ outFormat: oracledb.OBJECT },
+			function(err, rows) {
+				if (err) throw err;
+				res.send(rows.rows);
+			}
+		);
+	});
+});
+
+app.get('/api/allbookings', (req, res) => {
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) throw err;
+		connection.execute('select * from BOOKING', [], { outFormat: oracledb.OBJECT }, function(err, rows) {
 			if (err) throw err;
 			res.send(rows.rows);
 		});
@@ -208,10 +272,11 @@ app.post('/api/addactivity', function(req, res) {
 
 	let imageFile = req.files.imageFile;
 
-	imageFile.mv(__dirname + '/uploads/' + imageFile.name, function(err, result) {
+	const randomNumber = Math.floor(Math.random() * 9999999999);
+	imageFile.mv(__dirname + '/uploads/' + randomNumber + imageFile.name, function(err, result) {
 		if (err) return res.status(500).send(err);
 
-		console.log('http://kioskapi.tk:4000/images/' + imageFile.name);
+		console.log('http://kioskapi.tk:4000/images/' + randomNumber + imageFile.name);
 	});
 
 	res.setHeader('Content-Type', 'application/json');
@@ -241,6 +306,59 @@ app.post('/api/addactivity', function(req, res) {
 	});
 });
 
+app.post('/api/bookevent', function(req, res) {
+	res.setHeader('Content-Type', 'application/json');
+	console.log(req);
+
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) {
+			console.log(err);
+			res.sendStatus(500);
+			return;
+		}
+		connection.execute(
+			'INSERT INTO BOOKING (BOOKED_DATE, EVENT_ID, USER_ID) VALUES(:BOOKDATE, :EVENTID, :USERID)',
+			[ req.body.BOOK_DATE, req.body.EVENT_ID, req.body.USER_ID ],
+			{ outFormat: oracledb.OBJECT },
+			function(err, result) {
+				if (err) {
+					res.send(err);
+				} else {
+					res.status(200).send({ Status: 'success' });
+				}
+			}
+		);
+	});
+});
+
+app.put('/api/updateSeat', (req, res) => {
+	var seatLeft = req.body.SEAT_LEFT;
+
+	res.setHeader('Content-Type', 'application/json');
+	oracledb.getConnection(config, function(err, connection) {
+		if (err) {
+			console.log(err);
+			res.sendStatus(500);
+			return;
+		}
+		connection.execute(
+			`UPDATE EVENT SET SEAT_LEFT = :SEATLEFT WHERE EVENT_ID = :EVENTID`,
+			[ seatLeft - 1, req.body.EVENT_ID ],
+			{ outFormat: oracledb.OBJECT },
+			function(err, result) {
+				console.log(err);
+				console.log(result);
+
+				if (err) {
+					res.send(err);
+				} else {
+					res.status(200).send({ Status: 'success' });
+				}
+			}
+		);
+	});
+});
+
 app.post('/api/addservice', function(req, res) {
 	if (Object.keys(req.files).length == 0) {
 		return res.status(400).send('No files were uploaded.');
@@ -248,11 +366,11 @@ app.post('/api/addservice', function(req, res) {
 	console.log(req);
 
 	let imageFile = req.files.imageFile;
-
-	imageFile.mv(__dirname + '/uploads/' + imageFile.name, function(err, result) {
+	const randomNumber = Math.floor(Math.random() * 9999999999);
+	imageFile.mv(__dirname + '/uploads/' + randomNumber + imageFile.name, function(err, result) {
 		if (err) return res.status(500).send(err);
 
-		console.log('http://kioskapi.tk:4000/images/' + imageFile.name);
+		console.log('http://localhost:3000/images/' + randomNumber + imageFile.name);
 	});
 
 	res.setHeader('Content-Type', 'application/json');
@@ -283,8 +401,19 @@ app.post('/api/addservice', function(req, res) {
 });
 
 app.post('/api/addevent', (req, res) => {
-	// const result = validateLogin(req.body);
-	// if (result.error) return res.status(400).send(result.error);
+	if (Object.keys(req.files).length == 0) {
+		return res.status(400).send('No files were uploaded.');
+	}
+	console.log(req);
+
+	let imageFile = req.files.IMAGE_URL;
+	const randomNumber = Math.floor(Math.random() * 9999999999);
+	imageFile.mv(__dirname + '/uploads/' + randomNumber + imageFile.name, function(err, result) {
+		if (err) return res.status(500).send(err);
+
+		console.log('http://localhost:3000/images/' + randomNumber + imageFile.name);
+	});
+
 	res.setHeader('Content-Type', 'application/json');
 	oracledb.getConnection(config, function(err, connection) {
 		if (err) {
@@ -292,19 +421,22 @@ app.post('/api/addevent', (req, res) => {
 			res.sendStatus(500);
 			return;
 		}
+		console.log(req);
+
 		connection.execute(
-			'INSERT INTO EVENT (TITLE, IMAGE_URL, DESCRIPTION, SEAT_NUMBER, CREATED_AT, UPDATED_AT, EVENT_DATE, EVENT_TIME, EVENT_TYPE, EVENT_STATUS) VALUES(:ETITLE, :EIMAGEURL, :EDESCRIPTION, :ESEAT, :ECREATEDAT, :EUPDATEDAT, :EVENTDATE, :EVENTTIME, :EVENTTYPE, :EVENTSTATUS)',
+			'INSERT INTO EVENT (TITLE, IMAGE_URL, DESCRIPTION, SEAT_NUMBER, CREATED_AT, UPDATED_AT, EVENT_DATE, EVENT_TYPE, EVENT_STATUS, EVENT_END_DATE, SEAT_LEFT) VALUES(:ETITLE, :EIMAGEURL, :EDESCRIPTION, :ESEAT, :ECREATEDAT, :EUPDATEDAT, :EVENTDATE, :EVENTTYPE, :EVENTSTATUS, :EVENTENDDATE, :SEATLEFT)',
 			[
 				req.body.TITLE,
-				req.body.IMAGE_URL,
+				'http://localhost:3000/images/' + randomNumber + imageFile.name,
 				req.body.DESCRIPTION,
 				req.body.SEAT_NUMBER,
 				req.body.CREATED_AT,
 				req.body.UPDATED_AT,
 				req.body.EVENT_DATE,
-				req.body.EVENT_TIME,
 				req.body.EVENT_TYPE,
-				req.body.EVENT_STATUS
+				req.body.EVENT_STATUS,
+				req.body.EVENT_END_DATE,
+				req.body.SEAT_LEFT
 			],
 			{ outFormat: oracledb.OBJECT },
 			function(err, result) {
