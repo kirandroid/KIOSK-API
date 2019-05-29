@@ -14,6 +14,7 @@ app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 const port = process.env.PORT || 3000;
 oracledb.autoCommit = true;
+const apiUrl = "http://localhost:3000"
 
 const config = {
   user: "root",
@@ -44,7 +45,7 @@ app.post("/api/upload", function(req, res) {
 
     res.send({
       status: "Success yo!",
-      url: "http://kioskapi.tk:4000/images/" + imageFile.name
+      url: apiUrl+"/images/" + imageFile.name
     });
   });
 });
@@ -300,8 +301,20 @@ app.post("/api/login", (req, res) => {
 });
 
 app.post("/api/register", (req, res) => {
-  // const result = validateLogin(req.body);
-  // if (result.error) return res.status(400).send(result.error);
+  if (Object.keys(req.files).length == 0) {
+		return res.status(400).send('No files were uploaded.');
+	}
+	console.log(req);
+
+	let imageFile = req.files.imageFile;
+
+	const randomNumber = Math.floor(Math.random() * 9999999999);
+	imageFile.mv(__dirname + '/uploads/' + randomNumber + imageFile.name, function(err, result) {
+		if (err) return res.status(500).send(err);
+
+		console.log(apiUrl+"/images/" + randomNumber + imageFile.name);
+	});
+
   res.setHeader("Content-Type", "application/json");
   oracledb.getConnection(config, function(err, connection) {
     if (err) {
@@ -310,13 +323,14 @@ app.post("/api/register", (req, res) => {
       return;
     }
     connection.execute(
-      "INSERT INTO USERS (FIRST_NAME, LAST_NAME, USERNAME, PASSWORD, EMAIL, CREATED_AT, STUDENT_ID, UPDATED_AT, ROLE, STUDY_LEVEL, COURSE, CONTACT, GENDER) VALUES(:FNAME, :LNAME, :UNAME, :PASSER, :UEMAIL, :CREATEDAT, :STDID, :UPDATEDAT, :ROLE, :STUDYLVL, :COURSE, :CONTACT, :GENDER)",
+      "INSERT INTO USERS (FIRST_NAME, LAST_NAME, USERNAME, PASSWORD, EMAIL, IMAGE_URL, CREATED_AT, STUDENT_ID, UPDATED_AT, ROLE, STUDY_LEVEL, COURSE, CONTACT, GENDER) VALUES(:FNAME, :LNAME, :UNAME, :PASSER, :UEMAIL, :IMAGEURL, :CREATEDAT, :STDID, :UPDATEDAT, :ROLE, :STUDYLVL, :COURSE, :CONTACT, :GENDER)",
       [
         req.body.FIRST_NAME,
         req.body.LAST_NAME,
         req.body.USERNAME,
         req.body.PASSWORD,
         req.body.EMAIL,
+        apiUrl+"/images/" + imageFile.name,
         req.body.CREATED_AT,
         req.body.STUDENT_ID,
         req.body.UPDATED_AT,
@@ -397,7 +411,7 @@ app.post('/api/addactivity', function(req, res) {
 	imageFile.mv(__dirname + '/uploads/' + randomNumber + imageFile.name, function(err, result) {
 		if (err) return res.status(500).send(err);
 
-		console.log('http://kioskapi.tk:4000/images/' + randomNumber + imageFile.name);
+		console.log(apiUrl+"/images/" + randomNumber + imageFile.name);
 	});
 
 	res.setHeader('Content-Type', 'application/json');
@@ -411,7 +425,7 @@ app.post('/api/addactivity', function(req, res) {
 			'INSERT INTO ACTIVITY (ACT_NAME, ACT_IMAGE, ACT_DESCRIPTION, ACT_TYPE) VALUES(:ACTNAME, :ACTIMAGE, :ACTDESC, :ACTYPE)',
 			[
 				req.body.ACT_NAME,
-				'http://kioskapi.tk:4000/images/' + imageFile.name,
+				apiUrl+"/images/" + imageFile.name,
 				req.body.ACT_DESCRIPTION,
 				req.body.ACT_TYPE
 			],
@@ -494,7 +508,7 @@ app.post("/api/addservice", function(req, res) {
       if (err) return res.status(500).send(err);
 
       console.log(
-        "http://localhost:3000/images/" + randomNumber + imageFile.name
+        apiUrl+"/images/" + randomNumber + imageFile.name
       );
     }
   );
@@ -510,7 +524,7 @@ app.post("/api/addservice", function(req, res) {
       "INSERT INTO SERVICE (SER_NAME, SER_IMAGE, SER_DESCRIPTION, SER_TYPE) VALUES(:ACTNAME, :ACTIMAGE, :ACTDESC, :ACTYPE)",
       [
         req.body.SER_NAME,
-        "http://kioskapi.tk:4000/images/" + imageFile.name,
+        apiUrl+"/images/" + imageFile.name,
         req.body.SER_DESCRIPTION,
         req.body.SER_TYPE
       ],
@@ -540,7 +554,7 @@ app.post("/api/addevent", (req, res) => {
       if (err) return res.status(500).send(err);
 
       console.log(
-        "http://localhost:3000/images/" + randomNumber + imageFile.name
+        apiUrl+"/images/" + randomNumber + imageFile.name
       );
     }
   );
@@ -558,7 +572,7 @@ app.post("/api/addevent", (req, res) => {
       "INSERT INTO EVENT (TITLE, IMAGE_URL, DESCRIPTION, SEAT_NUMBER, CREATED_AT, UPDATED_AT, EVENT_DATE, EVENT_TYPE, EVENT_STATUS, EVENT_END_DATE, SEAT_LEFT) VALUES(:ETITLE, :EIMAGEURL, :EDESCRIPTION, :ESEAT, :ECREATEDAT, :EUPDATEDAT, :EVENTDATE, :EVENTTYPE, :EVENTSTATUS, :EVENTENDDATE, :SEATLEFT)",
       [
         req.body.TITLE,
-        "http://localhost:3000/images/" + randomNumber + imageFile.name,
+        apiUrl+"/images/" + randomNumber + imageFile.name,
         req.body.DESCRIPTION,
         req.body.SEAT_NUMBER,
         req.body.CREATED_AT,
