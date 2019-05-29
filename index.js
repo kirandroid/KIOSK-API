@@ -466,6 +466,30 @@ app.post("/api/bookevent", function(req, res) {
   });
 });
 
+app.post("/api/addstudentid", function(req, res) {
+  res.setHeader("Content-Type", "application/json");
+
+  oracledb.getConnection(config, function(err, connection) {
+    if (err) {
+      console.log(err);
+      res.sendStatus(500);
+      return;
+    }
+    connection.execute(
+      "INSERT INTO STUDENT (STUDENT_ID, AVAILABLE) VALUES(:STUDENTID, 1)",
+      [req.body.STUDENT_ID],
+      { outFormat: oracledb.OBJECT },
+      function(err, result) {
+        if (err) {
+          res.send(err);
+        } else {
+          res.status(200).send({ Status: "success" });
+        }
+      }
+    );
+  });
+});
+
 app.put("/api/updateSeat", (req, res) => {
   var seatLeft = req.body.SEAT_LEFT;
 
