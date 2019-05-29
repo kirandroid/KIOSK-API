@@ -16,9 +16,9 @@ const port = process.env.PORT || 3000;
 oracledb.autoCommit = true;
 
 const config = {
-  user: "SYSTEM",
-  password: "11446750",
-  connectString: "localhost:1521/PDBORCL"
+  user: "root",
+  password: "root",
+  connectString: "localhost:1521/xe"
 };
 app.get("/", (req, res) =>
   res.send(
@@ -226,7 +226,7 @@ app.get("/api/bookings", (req, res) => {
       console.log(err);
     }
     connection.execute(
-      "select * from BOOKING WHERE USER_ID = :USERID",
+      "select * from EVENT, USERS, BOOKING WHERE EVENT.EVENT_ID = BOOKING.EVENT_ID AND USERS.USER_ID = :USERID",
       [req.query.userId],
       { outFormat: oracledb.OBJECT },
       function(err, rows) {
@@ -241,7 +241,7 @@ app.get("/api/allbookings", (req, res) => {
   oracledb.getConnection(config, function(err, connection) {
     if (err) throw err;
     connection.execute(
-      "select * from BOOKING",
+      "select * from EVENT, USERS, BOOKING WHERE EVENT.EVENT_ID = BOOKING.EVENT_ID AND BOOKING.USER_ID = USERS.USER_ID",
       [],
       { outFormat: oracledb.OBJECT },
       function(err, rows) {
